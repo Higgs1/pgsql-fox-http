@@ -74,16 +74,6 @@
 /* Set up PgSQL */
 PG_MODULE_MAGIC;
 
-/* HTTP request methods we support */
-typedef enum {
-	HTTP_GET,
-	HTTP_POST,
-	HTTP_DELETE,
-	HTTP_PUT,
-	HTTP_HEAD,
-	HTTP_PATCH
-} http_method;
-
 /* Components (and postitions) of the http_request tuple type */
 enum {
 	REQ_METHOD = 0,
@@ -378,29 +368,6 @@ http_error(CURLcode err, const char *error_buffer)
 		PG_RETURN_NULL(); \
 	} \
 	} while (0);
-
-
-/**
-*  Convert a request type string into the appropriate enumeration value.
-*/
-static http_method
-request_type(const char *method)
-{
-	if ( strcasecmp(method, "GET") == 0 )
-		return HTTP_GET;
-	else if ( strcasecmp(method, "POST") == 0 )
-		return HTTP_POST;
-	else if ( strcasecmp(method, "PUT") == 0 )
-		return HTTP_PUT;
-	else if ( strcasecmp(method, "DELETE") == 0 )
-		return HTTP_DELETE;
-	else if ( strcasecmp(method, "HEAD") == 0 )
-		return HTTP_HEAD;
-	else if ( strcasecmp(method, "PATCH") == 0 )
-		return HTTP_PATCH;
-	else
-		return HTTP_GET;
-}
 
 /**
 * Given a field name and value, output a http_header tuple.
@@ -875,7 +842,6 @@ Datum http_request(PG_FUNCTION_ARGS)
 
 	char *uri;
 	char *method_str;
-	http_method method;
 
 	/* Processing */
 	CURLcode err;
@@ -947,9 +913,7 @@ Datum http_request(PG_FUNCTION_ARGS)
 	if ( nulls[REQ_METHOD] )
 		elog(ERROR, "http_request.method is NULL");
 	method_str = TextDatumGetCString(values[REQ_METHOD]);
-	method = request_type(method_str);
 	elog(DEBUG2, "pgsql-http: method '%s'", method_str);
-	pfree(method_str);
 
 	/* Set up global HTTP handle */
 	g_http_handle = http_get_handle();
@@ -962,6 +926,10 @@ Datum http_request(PG_FUNCTION_ARGS)
 
 	/* Set the user agent */
 	CURL_SETOPT(g_http_handle, CURLOPT_USERAGENT, PG_VERSION_STR);
+        
+        /* Set the http method */
+	CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, method_str);
+        pfree(method_str);
 
 	/* Restrict to just http/https. Leaving unrestricted */
 	/* opens possibility of users requesting file:/// urls */
@@ -1000,13 +968,6 @@ Datum http_request(PG_FUNCTION_ARGS)
 
 	/* Set the HTTP content encoding to all curl supports */
 	CURL_SETOPT(g_http_handle, CURLOPT_ACCEPT_ENCODING, "");
-
-	if ( method != HTTP_HEAD )
-	{
-		/* Follow redirects, as many as 5 */
-		CURL_SETOPT(g_http_handle, CURLOPT_FOLLOWLOCATION, 1);
-		CURL_SETOPT(g_http_handle, CURLOPT_MAXREDIRS, 5);
-	}
 
 	if ( g_use_keepalive )
 	{
@@ -1050,47 +1011,6 @@ Datum http_request(PG_FUNCTION_ARGS)
 		/* Read the content */
 		content_text = DatumGetTextP(values[REQ_CONTENT]);
 		content_size = VARSIZE(content_text) - VARHDRSZ;
-
-		if ( method == HTTP_GET || method == HTTP_POST )
-		{
-			/* Add the content to the payload */
-			CURL_SETOPT(g_http_handle, CURLOPT_POST, 1);
-			if ( method == HTTP_GET )
-			{
-				/* Force the verb to be GET */
-				CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, "GET");
-			}
-			CURL_SETOPT(g_http_handle, CURLOPT_POSTFIELDS, text_to_cstring(content_text));
-		}
-		else if ( method == HTTP_PUT || method == HTTP_PATCH )
-		{
-			if ( method == HTTP_PATCH )
-				CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, "PATCH");
-			initStringInfo(&si_read);
-			appendBinaryStringInfo(&si_read, VARDATA(content_text), content_size);
-			CURL_SETOPT(g_http_handle, CURLOPT_UPLOAD, 1);
-			CURL_SETOPT(g_http_handle, CURLOPT_READFUNCTION, http_readback);
-			CURL_SETOPT(g_http_handle, CURLOPT_READDATA, &si_read);
-			CURL_SETOPT(g_http_handle, CURLOPT_INFILESIZE, content_size);
-		}
-		else
-		{
-			/* Never get here */
-			elog(ERROR, "illegal HTTP method");
-		}
-	}
-	else if ( method == HTTP_DELETE )
-	{
-		CURL_SETOPT(g_http_handle, CURLOPT_CUSTOMREQUEST, "DELETE");
-	}
-	else if ( method == HTTP_HEAD )
-	{
-		CURL_SETOPT(g_http_handle, CURLOPT_NOBODY, 1);
-	}
-	else if ( method == HTTP_PUT || method == HTTP_POST )
-	{
-		/* If we had a content we do not reach that part */
-		elog(ERROR, "http_request.content is NULL");
 	}
 
 	/* Set the headers */
