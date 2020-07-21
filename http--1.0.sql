@@ -1,11 +1,6 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION http" to load this file. \quit
 
-CREATE DOMAIN content_type AS text
-CHECK (
-    VALUE ~ '^\S+\/\S+'
-);
-
 CREATE TYPE http_header AS (
     field VARCHAR,
     value VARCHAR
