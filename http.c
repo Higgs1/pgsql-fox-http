@@ -88,9 +88,10 @@ typedef enum {
 enum {
 	REQ_METHOD = 0,
 	REQ_URI = 1,
-	REQ_HEADERS = 2,
-	REQ_CONTENT_TYPE = 3,
-	REQ_CONTENT = 4
+        REQ_VERSION = 2,
+	REQ_HEADERS = 3,
+	REQ_CONTENT_TYPE = 4,
+	REQ_CONTENT = 5
 } http_request_type;
 
 /* Components (and postitions) of the http_response tuple type */
