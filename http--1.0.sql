@@ -1,16 +1,6 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION http" to load this file. \quit
 
-CREATE DOMAIN http_method AS text
-CHECK (
-    VALUE ILIKE 'get' OR
-    VALUE ILIKE 'post' OR
-    VALUE ILIKE 'put' OR
-    VALUE ILIKE 'delete' OR
-    VALUE ILIKE 'patch' OR
-    VALUE ILIKE 'head'
-);
-
 CREATE DOMAIN content_type AS text
 CHECK (
     VALUE ~ '^\S+\/\S+'
@@ -22,18 +12,18 @@ CREATE TYPE http_header AS (
 );
 
 CREATE TYPE http_response AS (
-    status INTEGER,
-    content_type VARCHAR,
+    status  INTEGER,
+    content_type TEXT,
     headers http_header[],
-    content VARCHAR
+    content TEXT
 );
 
 CREATE TYPE http_request AS (
-    method http_method,
-    uri VARCHAR,
+    method  TEXT,
+    uri     TEXT,
     headers http_header[],
-    content_type VARCHAR,
-    content VARCHAR
+    content_type TEXT,
+    content TEXT
 );
 
 CREATE OR REPLACE FUNCTION http_set_curlopt (curlopt VARCHAR, value VARCHAR) 
