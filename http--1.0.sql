@@ -21,7 +21,6 @@ CREATE TYPE http_request AS (
     uri     TEXT,
     version http_version,
     headers http_header[],
-    content_type TEXT,
     content TEXT
 );
 
@@ -47,32 +46,32 @@ CREATE OR REPLACE FUNCTION http(request http_request)
 
 CREATE OR REPLACE FUNCTION http_get(uri VARCHAR)
     RETURNS http_response
-    AS $$ SELECT http(('GET', $1, NULL, NULL, NULL, NULL)::http_request) $$
+    AS $$ SELECT http(('GET', $1, NULL, NULL, NULL)::http_request) $$
     LANGUAGE 'sql';
 
-CREATE OR REPLACE FUNCTION http_post(uri VARCHAR, content VARCHAR, content_type VARCHAR)
+CREATE OR REPLACE FUNCTION http_post(uri VARCHAR, content VARCHAR)
     RETURNS http_response
-    AS $$ SELECT http(('POST', $1, NULL, NULL, $3, $2)::http_request) $$
+    AS $$ SELECT http(('POST', $1, NULL, NULL, $2)::http_request) $$
     LANGUAGE 'sql';
 
-CREATE OR REPLACE FUNCTION http_put(uri VARCHAR, content VARCHAR, content_type VARCHAR)
+CREATE OR REPLACE FUNCTION http_put(uri VARCHAR, content VARCHAR)
     RETURNS http_response
-    AS $$ SELECT http(('PUT', $1, NULL, NULL, $3, $2)::http_request) $$
+    AS $$ SELECT http(('PUT', $1, NULL, NULL, $2)::http_request) $$
     LANGUAGE 'sql';
 
-CREATE OR REPLACE FUNCTION http_patch(uri VARCHAR, content VARCHAR, content_type VARCHAR)
+CREATE OR REPLACE FUNCTION http_patch(uri VARCHAR, content VARCHAR)
     RETURNS http_response
-    AS $$ SELECT http(('PATCH', $1, NULL, NULL, $3, $2)::http_request) $$
+    AS $$ SELECT http(('PATCH', $1, NULL, NULL, $2)::http_request) $$
     LANGUAGE 'sql';
 
 CREATE OR REPLACE FUNCTION http_delete(uri VARCHAR)
     RETURNS http_response
-    AS $$ SELECT http(('DELETE', $1, NULL, NULL, NULL, NULL)::http_request) $$
+    AS $$ SELECT http(('DELETE', $1, NULL, NULL, NULL)::http_request) $$
     LANGUAGE 'sql';
     
 CREATE OR REPLACE FUNCTION http_head(uri VARCHAR)
     RETURNS http_response
-    AS $$ SELECT http(('HEAD', $1, NULL, NULL, NULL, NULL)::http_request) $$
+    AS $$ SELECT http(('HEAD', $1, NULL, NULL, NULL)::http_request) $$
     LANGUAGE 'sql';
 
 CREATE OR REPLACE FUNCTION urlencode(string VARCHAR)

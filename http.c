@@ -80,8 +80,7 @@ enum {
 	REQ_URI = 1,
         REQ_VERSION = 2,
 	REQ_HEADERS = 3,
-	REQ_CONTENT_TYPE = 4,
-	REQ_CONTENT = 5
+	REQ_CONTENT = 4
 } http_request_type;
 
 /* Components (and postitions) of the http_response tuple type */
@@ -502,13 +501,6 @@ header_array_to_slist(ArrayType *array, struct curl_slist *headers)
 			char  *buffer = NULL;
 			char *header_val;
 			char *header_fld = TextDatumGetCString(values[HEADER_FIELD]);
-
-			/* Don't process "content-type" in the optional headers */
-			if ( strlen(header_fld) <= 0 || strncasecmp(header_fld, "Content-Type", 12) == 0 )
-			{
-				elog(NOTICE, "'Content-Type' is not supported as an optional header");
-				continue;
-			}
 
 			if ( nulls[HEADER_VALUE] )
 				header_val = pstrdup("");
@@ -995,22 +987,17 @@ Datum http_request(PG_FUNCTION_ARGS)
 	{
 		text *content_text;
 		long content_size;
-		char *content_type;
-		char buffer[1024];
-
-		/* Read the content type */
-		if ( nulls[REQ_CONTENT_TYPE] || ! values[REQ_CONTENT_TYPE] )
-			elog(ERROR, "http_request.content_type is NULL");
-		content_type = TextDatumGetCString(values[REQ_CONTENT_TYPE]);
-
-		/* Add content type to the headers */
-		snprintf(buffer, sizeof(buffer), "Content-Type: %s", content_type);
-		headers = curl_slist_append(headers, buffer);
-		pfree(content_type);
 
 		/* Read the content */
 		content_text = DatumGetTextP(values[REQ_CONTENT]);
 		content_size = VARSIZE(content_text) - VARHDRSZ;
+                
+                initStringInfo(&si_read);
+                appendBinaryStringInfo(&si_read, VARDATA(content_text), content_size);
+                CURL_SETOPT(g_http_handle, CURLOPT_UPLOAD, 1);
+                CURL_SETOPT(g_http_handle, CURLOPT_READFUNCTION, http_readback);
+                CURL_SETOPT(g_http_handle, CURLOPT_READDATA, &si_read);
+                CURL_SETOPT(g_http_handle, CURLOPT_INFILESIZE, content_size);
 	}
 
 	/* Set the headers */
