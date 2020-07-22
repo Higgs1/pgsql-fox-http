@@ -1,7 +1,5 @@
 # PostgreSQL HTTP Client
 
-[![Build Status](https://api.travis-ci.org/pramsey/pgsql-http.svg?branch=master)](https://travis-ci.org/pramsey/pgsql-http)
-
 ## Motivation
 
 Wouldn't it be nice to be able to write a trigger that called a web service? Either to get back a result, or to poke that service into refreshing itself against the new state of the database?
