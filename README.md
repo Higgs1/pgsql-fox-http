@@ -9,10 +9,10 @@ This extension is for that.
 ## Examples
 
 ```sql
-SELECT urlencode('my special string''s & things?');
+SELECT url_quote_plus('my special string''s & things?');
 ```
 ```
-              urlencode
+              url_quote_plus
 -------------------------------------
  my+special+string%27s+%26+things%3F
 (1 row)
@@ -95,13 +95,13 @@ SELECT status, content_type, content::json->>'url' AS url
     200 | application/json | http://httpbin.org/delete
 ```
 
-To POST to a URL using a data payload instead of parameters embedded in the URL, use the `application/x-www-form-urlencoded` content type.
+To POST to a URL using a data payload instead of parameters embedded in the URL, use the `application/x-www-form-url_quote_plusd` content type.
 
 ```sql
 SELECT status, content::json->>'form'
   FROM http_post('http://httpbin.org/post',
                  'myvar=myval&foo=bar',
-                 'application/x-www-form-urlencoded');
+                 'application/x-www-form-url_quote_plusd');
 ```
 
 Remember to [URL encode](http://en.wikipedia.org/wiki/Percent-encoding) content that includes any "special" characters (really, anything other than a-z and 0-9).
@@ -109,8 +109,8 @@ Remember to [URL encode](http://en.wikipedia.org/wiki/Percent-encoding) content 
 ```sql
 SELECT status, content::json->>'form'
   FROM http_post('http://httpbin.org/post',
-                 'myvar=' || urlencode('my special string & things?'),
-                 'application/x-www-form-urlencoded');
+                 'myvar=' || url_quote_plus('my special string & things?'),
+                 'application/x-www-form-url_quote_plusd');
 ```
 
 To access binary content, you must coerce the content from the default `varchar` representation to a `bytea` representation using the `textsend` function. Using the default `varchar::bytea` cast will not work, as the cast will stop the first time it hits a zero-valued byte (common in binary data).
@@ -198,7 +198,7 @@ As seen in the examples, you can unspool the array of `http_header` tuples into 
 * `http_head(uri VARCHAR)` returns `http_response`
 * `http_set_curlopt(curlopt VARCHAR, value varchar)` returns `boolean`
 * `http_reset_curlopt()` returns `boolean`
-* `urlencode(string VARCHAR)` returns `text`
+* `url_quote_plus(string VARCHAR)` returns `text`
 
 ## CURL Options
 

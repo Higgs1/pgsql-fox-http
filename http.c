@@ -1194,9 +1194,9 @@ static int chars_to_not_encode[] = {
 * Utility function for users building URL encoded requests, applies
 * standard URL encoding to an input string.
 */
-Datum urlencode(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(urlencode);
-Datum urlencode(PG_FUNCTION_ARGS)
+Datum url_quote_plus(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(url_quote_plus);
+Datum url_quote_plus(PG_FUNCTION_ARGS)
 {
 	text *txt = PG_GETARG_TEXT_P(0); /* Declare strict, so no test for NULL input */
 	size_t txt_size = VARSIZE(txt) - VARHDRSZ;

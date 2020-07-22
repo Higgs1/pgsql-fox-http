@@ -74,7 +74,7 @@ CREATE OR REPLACE FUNCTION http_head(uri VARCHAR)
     AS $$ SELECT http(('HEAD', $1, NULL, NULL, NULL)::http_request) $$
     LANGUAGE 'sql';
 
-CREATE OR REPLACE FUNCTION urlencode(string VARCHAR)
+CREATE OR REPLACE FUNCTION url_quote_plus(string VARCHAR)
     RETURNS TEXT
     AS 'MODULE_PATHNAME'
     LANGUAGE 'c'
