@@ -76,18 +76,19 @@ PG_MODULE_MAGIC;
 
 /* Components (and postitions) of the http_request tuple type */
 enum {
-	REQ_METHOD = 0,
-	REQ_URI = 1,
-        REQ_VERSION = 2,
+	REQ_METHOD  = 0,
+	REQ_URI     = 1,
+  REQ_VERSION = 2,
 	REQ_HEADERS = 3,
 	REQ_CONTENT = 4
 } http_request_type;
 
 /* Components (and postitions) of the http_response tuple type */
 enum {
-	RESP_STATUS = 0,
-	RESP_HEADERS = 1,
-	RESP_CONTENT = 2
+  RESP_VERSION = 0,
+	RESP_STATUS  = 1,
+	RESP_HEADERS = 2,
+	RESP_CONTENT = 3
 } http_response_type;
 
 /* Components (and postitions) of the http_header tuple type */
@@ -844,6 +845,7 @@ Datum http_request(PG_FUNCTION_ARGS)
 	StringInfoData si_read;
 
 	int http_return;
+  long http_version;
 	long long_status;
 	int status;
 	char *content_type = NULL;
@@ -1048,6 +1050,7 @@ Datum http_request(PG_FUNCTION_ARGS)
 
 	/* Read the metadata from the handle directly */
 	if ( (CURLE_OK != curl_easy_getinfo(g_http_handle, CURLINFO_RESPONSE_CODE, &long_status)) ||
+     (CURLE_OK != curl_easy_getinfo(g_http_handle, CURLINFO_HTTP_VERSION, &http_version)) ||
 		 (CURLE_OK != curl_easy_getinfo(g_http_handle, CURLINFO_CONTENT_TYPE, &content_type)) )
 	{
 		curl_slist_free_all(headers);
@@ -1061,6 +1064,10 @@ Datum http_request(PG_FUNCTION_ARGS)
 	ncolumns = tup_desc->natts;
 	values = palloc0(sizeof(Datum)*ncolumns);
 	nulls = palloc0(sizeof(bool)*ncolumns);
+  
+  /* HTTP version */
+  values[RESP_VERSION] = Int32GetDatum(http_version);
+  nulls[RESP_VERSION] = false;
 
 	/* Status code */
 	status = long_status;

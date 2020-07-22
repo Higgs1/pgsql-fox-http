@@ -1,8 +1,7 @@
 -- complain if script is sourced in psql, rather than via CREATE EXTENSION
 \echo Use "CREATE EXTENSION http" to load this file. \quit
 
-CREATE DOMAIN http_version NUMERIC(2, 1)
-DEFAULT 1.0;
+CREATE DOMAIN http_version NUMERIC(2, 1);
 
 CREATE TYPE http_header AS (
     field VARCHAR,
@@ -10,6 +9,7 @@ CREATE TYPE http_header AS (
 );
 
 CREATE TYPE http_response AS (
+    version INTEGER,
     status  INTEGER,
     headers http_header[],
     content TEXT
