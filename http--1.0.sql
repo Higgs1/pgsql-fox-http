@@ -11,7 +11,6 @@ CREATE TYPE http_header AS (
 
 CREATE TYPE http_response AS (
     status  INTEGER,
-    content_type TEXT,
     headers http_header[],
     content TEXT
 );

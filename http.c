@@ -86,9 +86,8 @@ enum {
 /* Components (and postitions) of the http_response tuple type */
 enum {
 	RESP_STATUS = 0,
-	RESP_CONTENT_TYPE = 1,
-	RESP_HEADERS = 2,
-	RESP_CONTENT = 3
+	RESP_HEADERS = 1,
+	RESP_CONTENT = 2
 } http_response_type;
 
 /* Components (and postitions) of the http_header tuple type */
@@ -1074,9 +1073,6 @@ Datum http_request(PG_FUNCTION_ARGS)
 		List *ctl;
 		ListCell *lc;
 
-		values[RESP_CONTENT_TYPE] = CStringGetTextDatum(content_type);
-		nulls[RESP_CONTENT_TYPE] = false;
-
 		/* Read the character set name out of the content type */
 		/* if there is one in there */
 		/* text/html; charset=iso-8859-1 */
@@ -1096,11 +1092,6 @@ Datum http_request(PG_FUNCTION_ARGS)
 				}
 			}
 		}
-	}
-	else
-	{
-		values[RESP_CONTENT_TYPE] = (Datum)0;
-		nulls[RESP_CONTENT_TYPE] = true;
 	}
 
 	/* Headers array */
