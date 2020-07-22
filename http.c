@@ -1248,9 +1248,44 @@ Datum url_quote_plus(PG_FUNCTION_ARGS)
 	PG_RETURN_TEXT_P(cstring_to_text(str_out));
 }
 
-// Local Variables:
-// mode: C++
-// tab-width: 4
-// c-basic-offset: 4
-// indent-tabs-mode: t
-// End:
+
+
+inline void urldecode2(char * dst, const char * src) {
+  char a, b;
+  while ( *src) {
+    if (( *src == '%') &&
+      (a = src[1]) && (b = src[2]) &&
+      (isxdigit(a) && isxdigit(b))) {
+      if (a >= 'a')
+        a -= 'a' - 'A';
+      if (a >= 'A')
+        a -= ('A' - 10);
+      else
+        a -= '0';
+      if (b >= 'a')
+        b -= 'a' - 'A';
+      if (b >= 'A')
+        b -= ('A' - 10);
+      else
+        b -= '0';
+      *dst++ = 16 *a + b;
+      src += 3;
+    } else if ( *src == '+') {
+      *dst++ = ' ';
+      src++;
+    } else
+      *dst++ = *src++;
+  }
+  * dst++ = '\0';
+}
+
+
+
+Datum url_unquote_plus(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(url_unquote_plus);
+Datum url_unquote_plus(PG_FUNCTION_ARGS) {
+  char *input = text_to_cstring(PG_GETARG_TEXT_PP(0));
+  char *output = malloc(strlen(input)+1);
+  urldecode2(output, input);
+  PG_RETURN_TEXT_P(cstring_to_text(output));
+}
